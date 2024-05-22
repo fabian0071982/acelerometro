@@ -74,7 +74,8 @@
             };
 
             // Enviar datos al código de Unity
-            UnitySendMessage('UnityMessageManager', 'ReceiveMessage', 'UpdateSensorData,' + JSON.stringify(accelerometerData) + ',' + JSON.stringify(gyroscopeData));
+            // Enviar datos al código de Unity a través de UnityMessageManager
+            UnityMessageManager.Instance.SendMessage('UpdateSensorData', JSON.stringify(accelerometerData), JSON.stringify(gyroscopeData));
         }
 
         // Agregar un evento para capturar los cambios en el sensor
