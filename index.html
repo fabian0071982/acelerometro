@@ -65,7 +65,40 @@
         if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
             container.className = "unity-mobile";
         }
+        var gameInstance = null;
 
+        // Función para obtener lecturas del acelerómetro y el giroscopio y enviarlas a Unity
+        function UpdateSensorData(event) {
+            // Obtener lecturas del acelerómetro
+            var accelerometerData = {
+                x: event.accelerationIncludingGravity.x,
+                y: event.accelerationIncludingGravity.y,
+                z: event.accelerationIncludingGravity.z
+            };
+
+            // Obtener lecturas del giroscopio
+            var gyroscopeData = {
+                alpha: event.rotationRate.alpha,
+                beta: event.rotationRate.beta,
+                gamma: event.rotationRate.gamma
+            };
+
+            // Enviar datos a Unity
+            var data = {
+                message: "UpdateSensorData",
+                accelerometerData: accelerometerData,
+                gyroscopeData: gyroscopeData
+            };
+
+            if (gameInstance != null && gameInstance.SendMessage) {
+                gameInstance.SendMessage("UnityMessageManager", "ReceiveMessage", JSON.stringify(data));
+            } else {
+                console.warn("gameInstance or gameInstance.SendMessage is not defined");
+            }
+        }
+
+        // Agregar el evento de actualización del sensor
+        window.addEventListener("devicemotion", UpdateSensorData, true);
         function StartCamera() {
             canvas.style.width = window.innerWidth + "px";
             canvas.style.height = window.innerHeight + "px";
@@ -115,39 +148,8 @@
             document.getElementById("startWebcamManuallyDiv").style.display = "none";
             iTracker.VIDEO.play()
         }
+       
 
-        // Función para obtener lecturas del acelerómetro y el giroscopio y enviarlas a Unity
-        function UpdateSensorData(event) {
-            // Obtener lecturas del acelerómetro
-            var accelerometerData = {
-                x: event.accelerationIncludingGravity.x,
-                y: event.accelerationIncludingGravity.y,
-                z: event.accelerationIncludingGravity.z
-            };
-
-            // Obtener lecturas del giroscopio
-            var gyroscopeData = {
-                alpha: event.rotationRate.alpha,
-                beta: event.rotationRate.beta,
-                gamma: event.rotationRate.gamma
-            };
-
-            // Enviar datos a Unity
-            var data = {
-                message: "UpdateSensorData",
-                accelerometerData: accelerometerData,
-                gyroscopeData: gyroscopeData
-            };
-
-            if (gameInstance != null && gameInstance.SendMessage) {
-                gameInstance.SendMessage("UnityMessageManager", "ReceiveMessage", JSON.stringify(data));
-            } else {
-                console.warn("gameInstance or gameInstance.SendMessage is not defined");
-            }
-        }
-
-        // Agregar el evento de actualización del sensor
-        window.addEventListener("devicemotion", UpdateSensorData, true);
     </script>
 </body>
 </html>
