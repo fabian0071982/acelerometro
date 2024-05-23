@@ -57,64 +57,65 @@
     </div>
     <script src="Build/apk_3d_acelerometro.loader.js"></script>
     <script>
-            var container = document.querySelector("#unity-container");
-            var canvas = document.querySelector("#unity-canvas");
-            var loadingBar = document.querySelector("#unity-loading-bar");
-            var progressBarFull = document.querySelector("#unity-progress-bar-full");
+        var container = document.querySelector("#unity-container");
+        var canvas = document.querySelector("#unity-canvas");
+        var loadingBar = document.querySelector("#unity-loading-bar");
+        var progressBarFull = document.querySelector("#unity-progress-bar-full");
 
-            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                container.className = "unity-mobile";
-            }
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            container.className = "unity-mobile";
+        }
 
-            function StartCamera() {
-                canvas.style.width = window.innerWidth + "px";
-                canvas.style.height = window.innerHeight + "px";
-                
-                document.getElementById("startWebcamDiv").style.display = "none";
+        function StartCamera() {
+            canvas.style.width = window.innerWidth + "px";
+            canvas.style.height = window.innerHeight + "px";
 
-                createUnityInstance(document.querySelector("#unity-canvas"), {
-                    dataUrl: "Build/apk_3d_acelerometro.data",
-                    frameworkUrl: "Build/apk_3d_acelerometro.framework.js",
-                    codeUrl: "Build/apk_3d_acelerometro.wasm",
-                    streamingAssetsUrl: "StreamingAssets",
-                    companyName: "DefaultCompany",
-                    productName: "3D_translate",
-                    productVersion: "0.1",
-                    //webglContextAttributes: { "preserveDrawingBuffer": true },
-                    // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
-                    // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
-                    },
-                    (progress) => {
-                        progressBarFull.style.width = 100 * progress + "%";
-                    }
-                ).then((unityInstance) => {
-                    window.gameInstance = unityInstance;
-                    window.unityInstance = unityInstance;
-                    window.iTracker.startWebcam();
+            document.getElementById("startWebcamDiv").style.display = "none";
 
-                    //[FIX]: some browsers (such as Wechat) does not allow webcam autoplay so we need to start the webcam manually via new button press
-                    window.waitForVideo = () => {
-                        setTimeout(() => {
-                            if (!window.iTracker.VIDEO) {
-                                window.waitForVideo();
-                            }
-                            else if (window.iTracker.VIDEO.currentTime <= 0) {
-                                document.getElementById("startWebcamManuallyDiv").style.display = "flex";
-                            }
-                        }, 2500)
-                    };
-                    window.waitForVideo();
+            createUnityInstance(document.querySelector("#unity-canvas"), {
+                dataUrl: "Build/apk_3d_acelerometro.data",
+                frameworkUrl: "Build/apk_3d_acelerometro.framework.js",
+                codeUrl: "Build/apk_3d_acelerometro.wasm",
+                streamingAssetsUrl: "StreamingAssets",
+                companyName: "DefaultCompany",
+                productName: "3D_translate",
+                productVersion: "0.1",
+                //webglContextAttributes: { "preserveDrawingBuffer": true },
+                // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
+                // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
+            },
+                (progress) => {
+                    progressBarFull.style.width = 100 * progress + "%";
+                }
+            ).then((unityInstance) => {
+                window.gameInstance = unityInstance;
+                window.unityInstance = unityInstance;
+                window.iTracker.startWebcam();
 
-                    loadingBar.style.display = "none";
-                });
+                //[FIX]: some browsers (such as Wechat) does not allow webcam autoplay so we need to start the webcam manually via new button press
+                window.waitForVideo = () => {
+                    setTimeout(() => {
+                        if (!window.iTracker.VIDEO) {
+                            window.waitForVideo();
+                        }
+                        else if (window.iTracker.VIDEO.currentTime <= 0) {
+                            document.getElementById("startWebcamManuallyDiv").style.display = "flex";
+                        }
+                    }, 2500)
+                };
+                window.waitForVideo();
 
-                loadingBar.style.display = "block";
-            }
+                loadingBar.style.display = "none";
+            });
 
-            function StartCameraManually() {
-                document.getElementById("startWebcamManuallyDiv").style.display = "none";
-                iTracker.VIDEO.play()
-            }
+            loadingBar.style.display = "block";
+        }
+
+        function StartCameraManually() {
+            document.getElementById("startWebcamManuallyDiv").style.display = "none";
+            iTracker.VIDEO.play()
+        }
+
         // Función para obtener lecturas del acelerómetro y el giroscopio y enviarlas a Unity
         function UpdateSensorData(event) {
             // Obtener lecturas del acelerómetro
@@ -134,11 +135,15 @@
             // Enviar datos a Unity
             var data = {
                 message: "UpdateSensorData",
-                accelerometerData: JSON.stringify(accelerometerData),
-                gyroscopeData: JSON.stringify(gyroscopeData)
+                accelerometerData: accelerometerData,
+                gyroscopeData: gyroscopeData
             };
 
-            gameInstance.SendMessage("UnityMessageManager", "ReceiveMessage", JSON.stringify(data));
+            if (gameInstance != null && gameInstance.SendMessage) {
+                gameInstance.SendMessage("UnityMessageManager", "ReceiveMessage", JSON.stringify(data));
+            } else {
+                console.warn("gameInstance or gameInstance.SendMessage is not defined");
+            }
         }
 
         // Agregar el evento de actualización del sensor
